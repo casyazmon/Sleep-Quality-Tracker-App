@@ -38,12 +38,16 @@ class SleepTrackerViewModel(
     private val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)
     private var tonight = MutableLiveData<SleepNight?>()
 
-    private val nights = database.getAllNights()
+    val nights = database.getAllNights()
 
     private val _navigateToSleepQuality = MutableLiveData<SleepNight>()
 
     val navigateToSleepQuality: LiveData<SleepNight>
         get() = _navigateToSleepQuality
+
+    private val _showSnackBar = MutableLiveData<Boolean>()
+    val showSnackBar: LiveData<Boolean>
+    get() = _showSnackBar
 
 
     init {
@@ -100,6 +104,7 @@ class SleepTrackerViewModel(
 
     fun onClear() {
         uiScope.launch {
+            _showSnackBar.value = true
             clear()
             tonight.value = null
         }
@@ -115,6 +120,7 @@ class SleepTrackerViewModel(
 
     override fun onCleared() {
         super.onCleared()
+
         viewModelJob.cancel()
     }
 
@@ -124,6 +130,22 @@ class SleepTrackerViewModel(
 
     fun doneNavigating() {
         _navigateToSleepQuality.value = null
+    }
+
+    val startButtonVisible = Transformations.map(tonight){
+        null == it
+    }
+
+    val stopButtonVisible = Transformations.map(tonight){
+        null != it
+    }
+
+    val clearButtonVisible = Transformations.map(nights){
+        it?.isNotEmpty()
+    }
+
+    fun doneSowingSnackBar() {
+        _showSnackBar.value = false
     }
 
 }
